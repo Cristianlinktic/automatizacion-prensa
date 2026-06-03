@@ -1,19 +1,28 @@
 import * as cheerio from 'cheerio';
 
 export interface AnalysisResult {
+  id?: string;
   url: string;
   title: string;
   tone: string;
   emoji: string;
   status: 'success' | 'no_tone' | 'error';
   timestamp: string;
+  media?: string;
+  type?: string;
+  region?: string;
+  summary?: string;
+  tier?: string;
+  costo_publicitario?: number;
+  audiencia?: number;
+  lecturabilidad?: number;
 }
 
 const EMOJI_MAP: Record<string, string> = {
   "green-smile": "😊",
   "serious_face_with_symbols_covering_mouth": "🤬",
   "no_mouth": "😶",
-  "serious": "🤬", // Added based on earlier user input
+  "serious": "🤬",
 };
 
 export async function extractToneFromUrl(url: string): Promise<AnalysisResult> {
@@ -32,9 +41,15 @@ export async function extractToneFromUrl(url: string): Promise<AnalysisResult> {
     let title = $('title').text().replace("IP Noticias - ", "").trim();
     if (!title) title = "Sin título";
 
-    // Extract Tone - Specific structure provided by user:
-    // <span class="ip-label">Tono</span>...<a title="Negativo"><i class="emoji_tono em em-serious_face_with_symbols_covering_mouth"></i></a>
+    // Extract Media, Type, Region from specific IP structure if possible
+    const media = $('.ip-label').filter((i, el) => $(el).text().trim() === 'Medio').closest('.row').find('.col-sm-4').last().text().trim() || "Desconocido";
+    const type = $('.ip-label').filter((i, el) => $(el).text().trim() === 'Tipo').closest('.row').find('.col-sm-4').last().text().trim() || "Web";
+    const region = $('.ip-label').filter((i, el) => $(el).text().trim() === 'Región').closest('.row').find('.col-sm-4').last().text().trim() || "Nacional";
     
+    // Summary extraction (trying meta description first)
+    const summary = $('meta[name="description"]').attr('content') || $('.article-body p').first().text().substring(0, 150) + "..." || "Sin resumen";
+
+    // Extract Tone
     const toneLabel = $('.ip-label').filter((i, el) => $(el).text().trim() === 'Tono');
     const toneContainer = toneLabel.closest('.row').find('.col-sm-4').last();
     const toneAnchor = toneContainer.find('a[title]');
@@ -43,7 +58,6 @@ export async function extractToneFromUrl(url: string): Promise<AnalysisResult> {
     const toneVal = toneAnchor.attr('title');
     const iconClasses = toneIcon.attr('class') || '';
     
-    // Extract emoji slug from class (e.g., em-green-smile)
     const emojiMatch = iconClasses.match(/em-([\w-]+)/);
     const emojiSlug = emojiMatch ? emojiMatch[1] : '';
 
@@ -54,7 +68,11 @@ export async function extractToneFromUrl(url: string): Promise<AnalysisResult> {
         tone: toneVal,
         emoji: EMOJI_MAP[emojiSlug] || EMOJI_MAP[toneVal.toLowerCase()] || "❓",
         status: 'success',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        media,
+        type,
+        region,
+        summary
       };
     }
 
@@ -64,7 +82,11 @@ export async function extractToneFromUrl(url: string): Promise<AnalysisResult> {
       tone: "No especificado",
       emoji: "➖",
       status: 'no_tone',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      media,
+      type,
+      region,
+      summary
     };
 
   } catch (error: any) {

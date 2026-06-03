@@ -7,23 +7,40 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   console.log('--- Analyze API Start ---');
   try {
-    const { urls } = await req.json();
-    console.log(`Received ${urls?.length} URLs to process`);
+    const body = await req.json();
+    const items = body.data || body.urls?.map((url: string) => ({ url }));
 
-    if (!urls || !Array.isArray(urls)) {
-      console.error('Invalid URL list provided');
-      return NextResponse.json({ error: 'Invalid URLs list' }, { status: 400 });
+    if (!items || !Array.isArray(items)) {
+      console.error('Invalid data provided');
+      return NextResponse.json({ error: 'Invalid data format' }, { status: 400 });
     }
+
+    console.log(`Received ${items.length} items to process. Example first item:`, items[0]);
 
     // Process in batches
     const rawResults: AnalysisResult[] = [];
     const batchSize = 5;
 
-    for (let i = 0; i < urls.length; i += batchSize) {
-      const batch = urls.slice(i, i + batchSize);
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
       console.log(`Processing batch ${i / batchSize + 1}...`);
+      
       const batchResults = await Promise.all(
-        batch.map(url => extractToneFromUrl(url))
+        batch.map(async (item: any) => {
+          const scraped = await extractToneFromUrl(item.url);
+          // Overwrite scraped data with Excel data if present (checking for null/undefined)
+          return {
+            ...scraped,
+            type: (item.tipo !== null && item.tipo !== undefined) ? item.tipo : scraped.type,
+            media: (item.medio !== null && item.medio !== undefined) ? item.medio : scraped.media,
+            summary: (item.resumen !== null && item.resumen !== undefined) ? item.resumen : scraped.summary,
+            region: (item.region !== null && item.region !== undefined) ? item.region : scraped.region,
+            tier: item.tier,
+            costo_publicitario: item.costo,
+            audiencia: item.audiencia,
+            lecturabilidad: item.lecturabilidad
+          };
+        })
       );
       rawResults.push(...batchResults);
     }
@@ -36,7 +53,15 @@ export async function POST(req: NextRequest) {
       tone: item.tone,
       emoji: item.emoji,
       status: item.status,
-      timestamp: item.timestamp 
+      timestamp: item.timestamp,
+      type: item.type,
+      region: item.region,
+      media: item.media,
+      summary: item.summary,
+      tier: item.tier,
+      costo_publicitario: item.costo_publicitario,
+      audiencia: item.audiencia,
+      lecturabilidad: item.lecturabilidad
     }));
 
     console.log('Inserting into Supabase...');

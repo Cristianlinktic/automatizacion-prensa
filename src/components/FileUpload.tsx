@@ -28,26 +28,93 @@ export function FileUpload({ onAnalysisComplete }: FileUploadProps) {
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws) as any[];
 
-        // Try to find a column named 'URL' or similar
-        const urls = data
+        // Try to find columns named 'URL', 'tipo', 'medio', 'resumen' or similar
+        const rowsToProcess = data
           .map(row => {
-            const urlKey = Object.keys(row).find(k => k.toUpperCase() === 'URL');
-            return urlKey ? row[urlKey] : null;
-          })
-          .filter(url => url && typeof url === 'string' && url.startsWith('http'));
+            // Normalize by removing ALL whitespace, newlines, and accents
+            const normalize = (s: string) => s.toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/\s+/g, "") // Remove all spaces and newlines
+              .trim();
 
-        if (urls.length === 0) {
-          alert('No se encontraron URLs en la columna "URL".');
+            const findKey = (name: string) => Object.keys(row).find(k => {
+              const normalizedK = normalize(k);
+              const normalizedName = normalize(name);
+              return normalizedK === normalizedName || normalizedK.includes(normalizedName);
+            });
+            
+            if (data.indexOf(row) === 0) {
+              console.log('Available Excel columns (Raw):', Object.keys(row));
+              console.log('Available Excel columns (Normalized):', Object.keys(row).map(normalize));
+            }
+
+            const urlKey = findKey('URL');
+            const typeKey = findKey('tipo');
+            const mediaKey = findKey('medio');
+            const summaryKey = findKey('resumen');
+            const regionKey = findKey('region');
+            const tierKey = findKey('tier');
+            // Try different possible names for cost
+            const costKey = findKey('costopublicitario') || findKey('costo');
+            const audienceKey = findKey('audiencia');
+            const readabilityKey = findKey('lecturabilidad');
+
+            const rawCost = costKey ? row[costKey] : 0;
+            
+            // Clean number specifically for formats like 3700053,5 or $ 3.700.053,5
+            const cleanNumber = (val: any) => {
+              if (val === undefined || val === null || val === '') return 0;
+              if (typeof val === 'number') return val;
+              if (typeof val === 'string') {
+                // Remove everything except digits and the LAST comma or dot
+                // In your case 3700053,5 -> the comma is the decimal
+                let cleaned = val.replace(/[^0-9.,]/g, '');
+                
+                // If it has both . and , (like 3.700.053,5)
+                if (cleaned.includes('.') && cleaned.includes(',')) {
+                  cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+                } else if (cleaned.includes(',')) {
+                  // If it only has comma (3700053,5)
+                  cleaned = cleaned.replace(',', '.');
+                }
+                
+                const result = parseFloat(cleaned);
+                return isNaN(result) ? 0 : result;
+              }
+              return 0;
+            };
+
+            const item = {
+              url: urlKey ? row[urlKey] : null,
+              tipo: typeKey ? row[typeKey] : null,
+              medio: mediaKey ? row[mediaKey] : null,
+              resumen: summaryKey ? row[summaryKey] : null,
+              region: regionKey ? row[regionKey] : null,
+              tier: tierKey ? row[tierKey] : null,
+              costo: cleanNumber(rawCost),
+              audiencia: cleanNumber(audienceKey ? row[audienceKey] : 0),
+              lecturabilidad: cleanNumber(readabilityKey ? row[readabilityKey] : 0),
+            };
+            
+            return item;
+          })
+          .filter(item => item.url && typeof item.url === 'string' && item.url.startsWith('http'));
+
+        console.log('Parsed Excel rows example:', rowsToProcess[0]);
+
+        if (rowsToProcess.length === 0) {
+          alert('No se encontraron URLs válidas en la columna "URL".');
           setIsUploading(false);
           return;
         }
 
-        setProgress(`Analizando ${urls.length} URLs...`);
+        setProgress(`Analizando ${rowsToProcess.length} registros...`);
         
         const response = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ urls })
+          body: JSON.stringify({ data: rowsToProcess })
         });
 
         if (!response.ok) throw new Error('Error en el servidor');
