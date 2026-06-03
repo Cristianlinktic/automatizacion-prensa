@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractToneFromUrl, AnalysisResult } from '@/lib/tone-parser';
 import { supabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const { urls } = await req.json();
