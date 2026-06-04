@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IP Analyzer - Monitoreo de Tono",
+  title: "Prensa - Monitoreo de Tono",
   description: "Sistema automatizado de análisis de tono para noticias",
 };
 

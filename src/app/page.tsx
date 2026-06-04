@@ -35,33 +35,33 @@ export default function Home() {
   const handleDelete = (id: string) => {
     setData(prev => prev.filter(item => item.id !== id));
   };
-const stats = {
-  total: data.length,
-  positivo: data.filter(i => i.tone === 'Positivo').length,
-  negativo: data.filter(i => i.tone === 'Negativo').length,
-  neutro: data.filter(i => i.tone === 'Neutro').length,
-  avgCosto: data.length > 0 ? data.reduce((acc, curr) => {
-    console.log(`Summing cost: ${curr.costo_publicitario} from URL: ${curr.url}`);
-    return acc + (Number(curr.costo_publicitario) || 0);
-  }, 0) / data.length : 0,
-  avgAudiencia: data.length > 0 ? data.reduce((acc, curr) => acc + (Number(curr.audiencia) || 0), 0) / data.length : 0,
-  avgLecturabilidad: data.length > 0 ? data.reduce((acc, curr) => acc + (Number(curr.lecturabilidad) || 0), 0) / data.length : 0,
-  tiers: data.reduce((acc, curr) => {
-    if (curr.tier) {
-      const t = curr.tier.toString().toUpperCase();
-      acc[t] = (acc[t] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>)
-};
+  const stats = {
+    total: data.length,
+    positivo: data.filter(i => i.tone === 'Positivo').length,
+    negativo: data.filter(i => i.tone === 'Negativo').length,
+    neutro: data.filter(i => i.tone === 'Neutro').length,
+    avgCosto: data.length > 0 ? data.reduce((acc, curr) => {
+      console.log(`Summing cost: ${curr.costo_publicitario} from URL: ${curr.url}`);
+      return acc + (Number(curr.costo_publicitario) || 0);
+    }, 0) / data.length : 0,
+    avgAudiencia: data.length > 0 ? data.reduce((acc, curr) => acc + (Number(curr.audiencia) || 0), 0) / data.length : 0,
+    avgLecturabilidad: data.length > 0 ? data.reduce((acc, curr) => acc + (Number(curr.lecturabilidad) || 0), 0) / data.length : 0,
+    tiers: data.reduce((acc, curr) => {
+      if (curr.tier) {
+        const t = curr.tier.toString().toUpperCase();
+        acc[t] = (acc[t] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>)
+  };
 
-console.log('Final Calculated Stats:', stats);
+  console.log('Final Calculated Stats:', stats);
 
 
   return (
     <main className="min-h-screen bg-slate-50/50 p-4 md:p-8 flex flex-col items-center">
       <div className="w-full flex flex-col md:flex-row gap-8 px-4">
-        
+
         {/* Sidebar */}
         <div className="flex flex-col gap-6 w-full md:w-[280px] shrink-0">
           <div className="flex items-center gap-3 px-2">
@@ -69,22 +69,22 @@ console.log('Final Calculated Stats:', stats);
               <PieChart size={28} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight leading-none">IP ANALYZER</h1>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Monitor v2.0</p>
+              <h1 className="text-2xl font-black text-slate-800 tracking-tight leading-none">PRENSA</h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Monitoreo</p>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-3xl p-2 shadow-sm border border-slate-200">
-            <CalendarSidebar 
-              selectedDate={selectedDate} 
-              onDateChange={setSelectedDate} 
+            <CalendarSidebar
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
             />
           </div>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 flex flex-col gap-8 min-w-0">
-          
+
           {/* Header & Upload */}
           <div className="bg-white rounded-[32px] p-10 shadow-sm border border-slate-200 flex flex-col gap-8">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
@@ -98,9 +98,9 @@ console.log('Final Calculated Stats:', stats);
                 <StatCard label="Total" value={stats.total} color="blue" />
                 <StatCard label="Positivo" value={stats.positivo} color="green" />
                 <StatCard label="Negativo" value={stats.negativo} color="red" />
-                <StatCard label="Prom. Costo" value={stats.avgCosto.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="amber" icon={<TrendingUp size={12}/>} />
-                <StatCard label="Prom. Audiencia" value={stats.avgAudiencia.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="indigo" icon={<Users size={12}/>} />
-                <StatCard label="Lecturabilidad" value={stats.avgLecturabilidad.toFixed(1)} color="purple" icon={<BookOpen size={12}/>} />
+                <StatCard label="Prom. Costo" value={stats.avgCosto.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="amber" icon={<TrendingUp size={12} />} />
+                <StatCard label="Prom. Audiencia" value={stats.avgAudiencia.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="indigo" icon={<Users size={12} />} />
+                <StatCard label="Lecturabilidad" value={stats.avgLecturabilidad.toFixed(1)} color="purple" icon={<BookOpen size={12} />} />
               </div>
             </div>
 
@@ -153,7 +153,7 @@ function StatCard({ label, value, color, icon }: { label: string, value: string 
     indigo: 'text-indigo-600 bg-indigo-50 border-indigo-100',
     purple: 'text-purple-600 bg-purple-50 border-purple-100',
   };
-  
+
   return (
     <div className={`px-4 py-3 rounded-[20px] border ${colors[color]} flex flex-col items-center min-w-[100px] transition-transform hover:scale-105`}>
       <span className="text-[9px] font-black uppercase tracking-[0.15em] opacity-60 mb-0.5 whitespace-nowrap text-center flex items-center gap-1">
