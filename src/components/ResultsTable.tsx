@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { AnalysisResult } from '@/lib/tone-parser';
 import { ExternalLink, CheckCircle, XCircle, AlertCircle, Trash2, Globe, MapPin, Newspaper } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +11,17 @@ interface ResultsTableProps {
 }
 
 export function ResultsTable({ data, onDelete }: ResultsTableProps) {
+  const [selectedRegion, setSelectedRegion] = useState('Todas');
+  
+  const regions = useMemo(() => {
+    const uniqueRegions = Array.from(new Set(data.map(d => d.region)));
+    return uniqueRegions.sort();
+  }, [data]);
+
+  const filteredData = useMemo(() => {
+    return selectedRegion === 'Todas' ? data : data.filter(d => d.region === selectedRegion);
+  }, [data, selectedRegion]);
+
   const handleDelete = async (id: string | undefined) => {
     if (!id) return;
     if (!confirm('¿Estás seguro de eliminar este registro?')) return;
@@ -44,12 +56,22 @@ export function ResultsTable({ data, onDelete }: ResultsTableProps) {
             <tr className="bg-slate-50/50 border-b border-slate-200">
               <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Contenido</th>
               <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Detalles</th>
+              <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">
+                <select 
+                    value={selectedRegion} 
+                    onChange={(e) => setSelectedRegion(e.target.value)} 
+                    className="bg-transparent text-xs font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-600 focus:outline-none"
+                >
+                  <option value="Todas">REGION</option>
+                  {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </th>
               <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Tono</th>
               <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {data.map((item) => (
+            {filteredData.map((item) => (
               <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
                 <td className="px-6 py-6 min-w-[300px]">
                   <div className="flex flex-col gap-2">
@@ -77,11 +99,13 @@ export function ResultsTable({ data, onDelete }: ResultsTableProps) {
                       <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-md">
                         <Globe size={12} /> {item.type}
                       </span>
-                      <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-md">
-                        <MapPin size={12} /> {item.region}
-                      </span>
                     </div>
                   </div>
+                </td>
+                <td className="px-6 py-6">
+                  <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-md w-fit">
+                    <MapPin size={12} /> {item.region}
+                  </span>
                 </td>
                 <td className="px-6 py-6">
                   <div className={`
