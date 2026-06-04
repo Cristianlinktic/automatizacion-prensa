@@ -54,12 +54,12 @@ export function ResultsTable({ data, onDelete }: ResultsTableProps) {
                 <td className="px-6 py-6 min-w-[300px]">
                   <div className="flex flex-col gap-2">
                     <span className="font-bold text-slate-800 text-base leading-tight">{item.title}</span>
-                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-slate-500 leading-relaxed">
                       {item.summary}
                     </p>
-                    <a 
-                      href={item.url} 
-                      target="_blank" 
+                    <a
+                      href={item.url}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-[10px] font-bold text-blue-500 hover:text-blue-700 flex items-center gap-1 mt-1 uppercase tracking-wider"
                     >
@@ -98,7 +98,7 @@ export function ResultsTable({ data, onDelete }: ResultsTableProps) {
                 <td className="px-6 py-6 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
+                      <button
                         onClick={() => handleDelete(item.id)}
                         className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                         title="Eliminar"
