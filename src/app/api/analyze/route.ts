@@ -9,13 +9,14 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const items = body.data || body.urls?.map((url: string) => ({ url }));
+    const targetDate = body.date || new Date().toISOString();
 
     if (!items || !Array.isArray(items)) {
       console.error('Invalid data provided');
       return NextResponse.json({ error: 'Invalid data format' }, { status: 400 });
     }
 
-    console.log(`Received ${items.length} items to process. Example first item:`, items[0]);
+    console.log(`Received ${items.length} items to process. Target Date: ${targetDate}`);
 
     // Process in batches
     const rawResults: AnalysisResult[] = [];
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
       tone: item.tone,
       emoji: item.emoji,
       status: item.status,
-      timestamp: item.timestamp,
+      timestamp: targetDate, // Use the provided date
       type: item.type,
       region: item.region,
       media: item.media,

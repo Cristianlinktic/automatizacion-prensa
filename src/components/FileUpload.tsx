@@ -6,9 +6,10 @@ import * as XLSX from 'xlsx';
 
 interface FileUploadProps {
   onAnalysisComplete: () => void;
+  selectedDate: Date;
 }
 
-export function FileUpload({ onAnalysisComplete }: FileUploadProps) {
+export function FileUpload({ onAnalysisComplete, selectedDate }: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
 
@@ -114,7 +115,10 @@ export function FileUpload({ onAnalysisComplete }: FileUploadProps) {
         const response = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data: rowsToProcess })
+          body: JSON.stringify({ 
+            data: rowsToProcess,
+            date: selectedDate.toISOString()
+          })
         });
 
         if (!response.ok) throw new Error('Error en el servidor');

@@ -105,7 +105,10 @@ export default function Home() {
             </div>
 
             <div className="bg-slate-50 p-6 rounded-3xl border border-dashed border-slate-200">
-              <FileUpload onAnalysisComplete={() => fetchHistory(selectedDate)} />
+              <FileUpload 
+                onAnalysisComplete={() => fetchHistory(selectedDate)} 
+                selectedDate={selectedDate}
+              />
             </div>
 
             {Object.keys(stats.tiers).length > 0 && (
