@@ -160,16 +160,14 @@ export default function Home() {
                 </h2>
                 <p className="text-slate-400 text-base mt-2 font-medium">Análisis de impacto y métricas publicitarias</p>
               </div>
-              {user?.role === 'admin' && (
-                <div className="flex flex-wrap gap-3">
-                  <StatCard label="Total" value={stats.total} color="blue" />
-                  <StatCard label="Positivo" value={stats.positivo} color="green" />
-                  <StatCard label="Negativo" value={stats.negativo} color="red" />
-                  <StatCard label="Prom. Costo" value={stats.avgCosto.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="amber" icon={<TrendingUp size={12} />} />
-                  <StatCard label="Prom. Audiencia" value={stats.avgAudiencia.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="indigo" icon={<Users size={12} />} />
-                  <StatCard label="Lecturabilidad" value={stats.avgLecturabilidad.toFixed(1)} color="purple" icon={<BookOpen size={12} />} />
-                </div>
-              )}
+              <div className="flex flex-wrap gap-3">
+                <StatCard label="Total" value={stats.total} color="blue" />
+                <StatCard label="Positivo" value={stats.positivo} color="green" />
+                <StatCard label="Negativo" value={stats.negativo} color="red" />
+                <StatCard label="Prom. Costo" value={stats.avgCosto.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="amber" icon={<TrendingUp size={12} />} />
+                <StatCard label="Prom. Audiencia" value={stats.avgAudiencia.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="indigo" icon={<Users size={12} />} />
+                <StatCard label="Lecturabilidad" value={stats.avgLecturabilidad.toFixed(1)} color="purple" icon={<BookOpen size={12} />} />
+              </div>
             </div>
 
             {user?.role === 'admin' && (
@@ -181,7 +179,7 @@ export default function Home() {
               </div>
             )}
 
-            {user?.role === 'admin' && Object.keys(stats.tiers).length > 0 && (
+            {Object.keys(stats.tiers).length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 flex items-center">Distribución Tiers:</span>
                 {Object.entries(stats.tiers).sort().map(([tier, count]) => (
@@ -192,7 +190,7 @@ export default function Home() {
               </div>
             )}
 
-            {user?.role === 'admin' && Object.keys(stats.regions).length > 0 && (
+            {Object.keys(stats.regions).length > 0 && (
               <div className="flex flex-col gap-4 pt-6 border-t border-slate-100">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
                   <MapPin size={12} className="text-blue-500" /> Monitoreo por Región
