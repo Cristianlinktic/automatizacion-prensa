@@ -8,9 +8,10 @@ import { supabase } from '@/lib/supabase';
 interface ResultsTableProps {
   data: AnalysisResult[];
   onDelete?: (id: string) => void;
+  isAdmin?: boolean;
 }
 
-export function ResultsTable({ data, onDelete }: ResultsTableProps) {
+export function ResultsTable({ data, onDelete, isAdmin = false }: ResultsTableProps) {
   const [selectedRegion, setSelectedRegion] = useState('Todas');
   
   const regions = useMemo(() => {
@@ -121,15 +122,17 @@ export function ResultsTable({ data, onDelete }: ResultsTableProps) {
                 </td>
                 <td className="px-6 py-6 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                        title="Eliminar"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+                    {isAdmin && (
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                          title="Eliminar"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    )}
                     <div className="flex items-center">
                       {item.status === 'success' && <CheckCircle className="text-green-500" size={20} />}
                       {item.status === 'no_tone' && <AlertCircle className="text-amber-500" size={20} />}

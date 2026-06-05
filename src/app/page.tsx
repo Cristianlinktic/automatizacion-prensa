@@ -1,18 +1,43 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarSidebar } from '@/components/CalendarSidebar';
 import { FileUpload } from '@/components/FileUpload';
 import { ResultsTable } from '@/components/ResultsTable';
 import { AnalysisResult } from '@/lib/tone-parser';
-import { LayoutDashboard, PieChart, TrendingUp, Users, BookOpen } from 'lucide-react';
+import { LayoutDashboard, PieChart, TrendingUp, Users, BookOpen, LogOut } from 'lucide-react';
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [data, setData] = useState<AnalysisResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const sessionStr = localStorage.getItem('session_user');
+    if (!sessionStr) {
+      router.push('/login');
+    } else {
+      try {
+        const parsed = JSON.parse(sessionStr);
+        setUser(parsed);
+      } catch (e) {
+        localStorage.removeItem('session_user');
+        router.push('/login');
+      }
+      setAuthLoading(false);
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('session_user');
+    router.push('/login');
+  };
 
   const fetchHistory = useCallback(async (date: Date) => {
     setIsLoading(true);
@@ -58,6 +83,19 @@ export default function Home() {
   console.log('Final Calculated Stats:', stats);
 
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center gap-6">
+        <div className="w-16 h-16 border-4 border-blue-500/10 border-t-blue-500 rounded-full animate-spin" />
+        <p className="text-sm font-black text-slate-400 uppercase tracking-widest animate-pulse">Verificando Sesión...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <main className="min-h-screen bg-slate-50/50 p-4 md:p-8 flex flex-col items-center">
       <div className="w-full flex flex-col md:flex-row gap-8 px-4">
@@ -79,6 +117,29 @@ export default function Home() {
               selectedDate={selectedDate}
               onDateChange={setSelectedDate}
             />
+          </div>
+
+          {/* User Profile Card */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center font-black text-blue-600 text-sm">
+                {user?.username?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-slate-800 truncate">@{user?.username}</p>
+                <span className={`text-[9px] font-black px-2 py-0.5 rounded-full inline-block mt-1 uppercase tracking-wider ${
+                  user?.role === 'admin' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {user?.role === 'admin' ? 'Administrador' : 'Lector'}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full py-2.5 px-4 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <LogOut size={14} /> Cerrar Sesión
+            </button>
           </div>
         </div>
 
@@ -104,12 +165,14 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="bg-slate-50 p-6 rounded-3xl border border-dashed border-slate-200">
-              <FileUpload 
-                onAnalysisComplete={() => fetchHistory(selectedDate)} 
-                selectedDate={selectedDate}
-              />
-            </div>
+            {user?.role === 'admin' && (
+              <div className="bg-slate-50 p-6 rounded-3xl border border-dashed border-slate-200">
+                <FileUpload 
+                  onAnalysisComplete={() => fetchHistory(selectedDate)} 
+                  selectedDate={selectedDate}
+                />
+              </div>
+            )}
 
             {Object.keys(stats.tiers).length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
@@ -137,7 +200,7 @@ export default function Home() {
                 <p className="text-sm font-black text-slate-400 uppercase tracking-widest animate-pulse">Sincronizando con base de datos...</p>
               </div>
             ) : (
-              <ResultsTable data={data} onDelete={handleDelete} />
+              <ResultsTable data={data} onDelete={handleDelete} isAdmin={user?.role === 'admin'} />
             )}
           </div>
         </div>
