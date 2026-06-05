@@ -13,15 +13,25 @@ interface ResultsTableProps {
 
 export function ResultsTable({ data, onDelete, isAdmin = false }: ResultsTableProps) {
   const [selectedRegion, setSelectedRegion] = useState('Todas');
+  const [selectedTone, setSelectedTone] = useState('Todos');
   
   const regions = useMemo(() => {
-    const uniqueRegions = Array.from(new Set(data.map(d => d.region)));
+    const uniqueRegions = Array.from(new Set(data.filter(d => d.region).map(d => d.region)));
     return uniqueRegions.sort();
   }, [data]);
 
+  const tones = useMemo(() => {
+    const uniqueTones = Array.from(new Set(data.filter(d => d.tone).map(d => d.tone)));
+    return uniqueTones.sort();
+  }, [data]);
+
   const filteredData = useMemo(() => {
-    return selectedRegion === 'Todas' ? data : data.filter(d => d.region === selectedRegion);
-  }, [data, selectedRegion]);
+    return data.filter(d => {
+      const regionMatch = selectedRegion === 'Todas' || d.region === selectedRegion;
+      const toneMatch = selectedTone === 'Todos' || d.tone === selectedTone;
+      return regionMatch && toneMatch;
+    });
+  }, [data, selectedRegion, selectedTone]);
 
   const handleDelete = async (id: string | undefined) => {
     if (!id) return;
@@ -67,7 +77,16 @@ export function ResultsTable({ data, onDelete, isAdmin = false }: ResultsTablePr
                   {regions.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </th>
-              <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Tono</th>
+              <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">
+                <select 
+                    value={selectedTone} 
+                    onChange={(e) => setSelectedTone(e.target.value)} 
+                    className="bg-transparent text-xs font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-600 focus:outline-none"
+                >
+                  <option value="Todos">TONO</option>
+                  {tones.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </th>
               <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Acciones</th>
             </tr>
           </thead>
