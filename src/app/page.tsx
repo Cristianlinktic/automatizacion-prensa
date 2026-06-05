@@ -8,7 +8,7 @@ import { CalendarSidebar } from '@/components/CalendarSidebar';
 import { FileUpload } from '@/components/FileUpload';
 import { ResultsTable } from '@/components/ResultsTable';
 import { AnalysisResult } from '@/lib/tone-parser';
-import { LayoutDashboard, PieChart, TrendingUp, Users, BookOpen, LogOut } from 'lucide-react';
+import { LayoutDashboard, PieChart, TrendingUp, Users, BookOpen, LogOut, MapPin } from 'lucide-react';
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -76,6 +76,11 @@ export default function Home() {
         const t = curr.tier.toString().toUpperCase();
         acc[t] = (acc[t] || 0) + 1;
       }
+      return acc;
+    }, {} as Record<string, number>),
+    regions: data.reduce((acc, curr) => {
+      const r = curr.region ? curr.region.trim() : 'Nacional';
+      acc[r] = (acc[r] || 0) + 1;
       return acc;
     }, {} as Record<string, number>)
   };
@@ -155,14 +160,16 @@ export default function Home() {
                 </h2>
                 <p className="text-slate-400 text-base mt-2 font-medium">Análisis de impacto y métricas publicitarias</p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <StatCard label="Total" value={stats.total} color="blue" />
-                <StatCard label="Positivo" value={stats.positivo} color="green" />
-                <StatCard label="Negativo" value={stats.negativo} color="red" />
-                <StatCard label="Prom. Costo" value={stats.avgCosto.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="amber" icon={<TrendingUp size={12} />} />
-                <StatCard label="Prom. Audiencia" value={stats.avgAudiencia.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="indigo" icon={<Users size={12} />} />
-                <StatCard label="Lecturabilidad" value={stats.avgLecturabilidad.toFixed(1)} color="purple" icon={<BookOpen size={12} />} />
-              </div>
+              {user?.role === 'admin' && (
+                <div className="flex flex-wrap gap-3">
+                  <StatCard label="Total" value={stats.total} color="blue" />
+                  <StatCard label="Positivo" value={stats.positivo} color="green" />
+                  <StatCard label="Negativo" value={stats.negativo} color="red" />
+                  <StatCard label="Prom. Costo" value={stats.avgCosto.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="amber" icon={<TrendingUp size={12} />} />
+                  <StatCard label="Prom. Audiencia" value={stats.avgAudiencia.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="indigo" icon={<Users size={12} />} />
+                  <StatCard label="Lecturabilidad" value={stats.avgLecturabilidad.toFixed(1)} color="purple" icon={<BookOpen size={12} />} />
+                </div>
+              )}
             </div>
 
             {user?.role === 'admin' && (
@@ -174,7 +181,7 @@ export default function Home() {
               </div>
             )}
 
-            {Object.keys(stats.tiers).length > 0 && (
+            {user?.role === 'admin' && Object.keys(stats.tiers).length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 flex items-center">Distribución Tiers:</span>
                 {Object.entries(stats.tiers).sort().map(([tier, count]) => (
@@ -182,6 +189,32 @@ export default function Home() {
                     {tier}: {count}
                   </span>
                 ))}
+              </div>
+            )}
+
+            {user?.role === 'admin' && Object.keys(stats.regions).length > 0 && (
+              <div className="flex flex-col gap-4 pt-6 border-t border-slate-100">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <MapPin size={12} className="text-blue-500" /> Monitoreo por Región
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {Object.entries(stats.regions).sort(([a], [b]) => a.localeCompare(b)).map(([region, count]) => (
+                    <div 
+                      key={region} 
+                      className="bg-slate-50/60 hover:bg-white border border-slate-200/60 hover:border-blue-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all duration-200 hover:scale-[1.03] hover:shadow-sm"
+                    >
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate w-full text-center">
+                        {region}
+                      </span>
+                      <span className="text-2xl font-black text-slate-800 mt-1">
+                        {count}
+                      </span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-1">
+                        {count === 1 ? 'registro' : 'registros'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
