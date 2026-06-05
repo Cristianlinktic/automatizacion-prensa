@@ -45,10 +45,51 @@ export async function POST(req: NextRequest) {
       );
       rawResults.push(...batchResults);
     }
-    console.log('Extraction complete. Mapping to DB schema...');
+    console.log('Extraction complete. Starting local keyword relevance filter...');
 
-    // Map to database schema and sanitize
-    const dbResults = rawResults.map(item => ({
+    // --- Local keyword relevance filter (no external API needed) ---
+    // Reads keywords from the env variable INTEREST_KEYWORDS.
+    // Falls back to saving everything if no keywords are configured.
+    const rawKeywords = process.env.INTEREST_KEYWORDS || '';
+
+    // Helper: strip accents and lowercase for robust matching
+    const normalizeText = (str: string): string =>
+      str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+    let filteredResults = [...rawResults];
+
+    if (rawKeywords.trim()) {
+      // Parse comma-separated list, strip spaces, remove empty entries
+      const keywords = rawKeywords
+        .split(',')
+        .map(k => normalizeText(k.trim()))
+        .filter(k => k.length > 0);
+
+      console.log(`Filtering with ${keywords.length} keyword(s):`, keywords);
+
+      filteredResults = rawResults.filter(item => {
+        const searchSpace = normalizeText(
+          `${item.title ?? ''} ${item.summary ?? ''}`
+        );
+        // Keep the row if ANY keyword appears anywhere in the combined text
+        return keywords.some(kw => searchSpace.includes(kw));
+      });
+
+      console.log(
+        `Keyword filter done. Kept ${filteredResults.length} of ${rawResults.length} items.`
+      );
+    } else {
+      console.warn(
+        '⚠️ INTEREST_KEYWORDS not set in .env — saving all items without filtering.'
+      );
+    }
+    // --- End of local keyword filter ---
+
+    // Map to database schema and sanitize only the filtered results
+    const dbResults = filteredResults.map(item => ({
       url: item.url,
       title: item.title,
       tone: item.tone,
@@ -65,7 +106,16 @@ export async function POST(req: NextRequest) {
       lecturabilidad: item.lecturabilidad
     }));
 
-    console.log('Inserting into Supabase...');
+    if (dbResults.length === 0) {
+      console.log('No relevant articles found after keyword filtering.');
+      return NextResponse.json({
+        success: true,
+        count: 0,
+        data: []
+      });
+    }
+
+    console.log(`Inserting ${dbResults.length} rows into Supabase...`);
     const { data, error } = await supabase
       .from('analyses')
       .insert(dbResults)
@@ -85,8 +135,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      count: rawResults.length, 
-      data: rawResults 
+      count: filteredResults.length, 
+      data: filteredResults 
     });
 
   } catch (error: any) {
