@@ -115,10 +115,20 @@ export function ResultsTable({ data, onDelete, isAdmin = false }: ResultsTablePr
                       <Newspaper size={14} className="text-slate-400" />
                       {item.media}
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-md">
                         <Globe size={12} /> {item.type}
                       </span>
+                      {item.tier && (
+                        <span className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${
+                          item.tier.toString().includes('1') ? 'bg-green-100 text-green-700 border border-green-200' :
+                          item.tier.toString().includes('2') ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                          item.tier.toString().includes('3') ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                          'bg-slate-50 text-slate-400 border border-slate-100'
+                        }`}>
+                          {item.tier}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </td>

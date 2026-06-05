@@ -161,13 +161,14 @@ export default function Home() {
                 <p className="text-slate-400 text-base mt-2 font-medium">Análisis de impacto y métricas publicitarias</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <StatCard label="Total" value={stats.total} color="blue" />
-                <StatCard label="Positivo" value={stats.positivo} color="green" />
-                <StatCard label="Negativo" value={stats.negativo} color="red" />
-                <StatCard label="Prom. Costo" value={stats.avgCosto.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="amber" icon={<TrendingUp size={12} />} />
-                <StatCard label="Prom. Audiencia" value={stats.avgAudiencia.toLocaleString(undefined, { maximumFractionDigits: 0 })} color="indigo" icon={<Users size={12} />} />
-                <StatCard label="Lecturabilidad" value={stats.avgLecturabilidad.toFixed(1)} color="purple" icon={<BookOpen size={12} />} />
+                <StatCard label="Total" value={stats.total.toLocaleString('es-ES', { maximumFractionDigits: 0 })} color="blue" />
+                <StatCard label="Positivo" value={stats.positivo.toLocaleString('es-ES', { maximumFractionDigits: 0 })} color="green" />
+                <StatCard label="Negativo" value={stats.negativo.toLocaleString('es-ES', { maximumFractionDigits: 0 })} color="red" />
+                <StatCard label="Prom. Costo" value={stats.avgCosto.toLocaleString('es-ES', { maximumFractionDigits: 0 })} color="amber" icon={<TrendingUp size={12} />} />
+                <StatCard label="Prom. Audiencia" value={stats.avgAudiencia.toLocaleString('es-ES', { maximumFractionDigits: 0 })} color="indigo" icon={<Users size={12} />} />
+                <StatCard label="Lecturabilidad" value={stats.avgLecturabilidad.toLocaleString('es-ES', { maximumFractionDigits: 0 })} color="purple" icon={<BookOpen size={12} />} />
               </div>
+
             </div>
 
             {user?.role === 'admin' && (
@@ -180,13 +181,41 @@ export default function Home() {
             )}
 
             {Object.keys(stats.tiers).length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 flex items-center">Distribución Tiers:</span>
-                {Object.entries(stats.tiers).sort().map(([tier, count]) => (
-                  <span key={tier} className="text-[10px] font-black text-slate-600 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-wider">
-                    {tier}: {count}
-                  </span>
-                ))}
+              <div className="flex flex-col gap-4 pt-6 border-t border-slate-100">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <TrendingUp size={12} className="text-amber-500" /> Clasificación por Importancia (Tiers)
+                </span>
+                <div className="flex flex-wrap gap-4">
+                  {Object.entries(stats.tiers).sort().map(([tier, count]) => {
+                    const isTier1 = tier.includes('1');
+                    const isTier2 = tier.includes('2');
+                    const isTier3 = tier.includes('3');
+                    
+                    let style = "bg-slate-50 text-slate-600 border-slate-200";
+                    let label = "Prioridad";
+                    if (isTier1) {
+                        style = "bg-green-50 text-green-700 border-green-200 shadow-sm shadow-green-100";
+                        label = "Alta Prioridad";
+                    } else if (isTier2) {
+                        style = "bg-amber-50 text-amber-700 border-amber-200 shadow-sm shadow-amber-50";
+                        label = "Prioridad Media";
+                    } else if (isTier3) {
+                        style = "bg-blue-50 text-blue-600 border-blue-100";
+                        label = "Prioridad Baja";
+                    }
+
+                    return (
+                      <div key={tier} className={`flex items-center gap-4 px-5 py-3 rounded-2xl border ${style} transition-all hover:scale-105`}>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-black uppercase tracking-wider">{tier}</span>
+                            <span className="text-[9px] font-bold uppercase tracking-tight opacity-70">{label}</span>
+                        </div>
+                        <div className="h-8 w-[1px] bg-current opacity-20"></div>
+                        <span className="text-2xl font-black">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
